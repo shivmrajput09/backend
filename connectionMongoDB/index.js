@@ -2,8 +2,7 @@
 const { default: mongoose } = require('mongoose');
 const connectionDB = require('./db');
  const app = express();
-  const connectionDB = require('./db');
-
+ 
  const PORT = 3005;
 
 //body parser
