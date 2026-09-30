@@ -1,7 +1,8 @@
  const express = require('express');
 const { default: mongoose } = require('mongoose');
 const connectionDB = require('./db');
- const app = express();
+ const app = express(); 
+ const user = require('./routes/user')
  
  const PORT = 3005;
 
@@ -10,6 +11,11 @@ app.use(express.json());
 
 //connect to db 
  connectionDB();
+
+ //load user file
+app.use('/api',user);
+
+
 
 
  app.get('/',(req,res)=>{

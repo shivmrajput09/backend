@@ -24,7 +24,7 @@ createdAt : {
 
 //model create 
 
-const TaskModel  = model("Test",userSchema)
+const TaskModel  = model("user",userSchema)
 
 module.exports = TaskModel // export 
 
