@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors"; 
 import mongoose from "mongoose";
+import User from "./models/userModel.js";
 
 let app = express();
 
@@ -31,6 +32,68 @@ const startServer = async () => {
         console.log(" MongoDB Connected Successfully!");
         
         // Jab database connect ho jayega, tab server start hoga
+
+ app.post("/create",async(req,res)=>{
+    try{
+     let {name,age,email,userName} =req.body
+  const newUser = await   User.create({
+        name,
+        age,
+        email,
+    userName
+     })
+   return   res.status(201).json({message:"User Create Succesfully." })
+
+    }
+    catch(error){
+    return res.status(400).json({message:error.message})
+
+    }
+
+ })
+
+//  app.get("/read",async(req,res)=>{
+//     try {
+//         const users = await User.find()
+//         return res.status(200).json(users )
+        
+//     } catch (error) {
+//                 return res.status(400).json({message:"user not found"})
+
+//     }
+
+//  })
+
+ 
+ app.get("/read/:userName",async(req,res)=>{
+    try {
+        const users = await User.findOne({userName:req.params.userName})
+        return res.status(200).json(users )
+        
+    } catch (error) {
+                return res.status(400).json({message:"user not found"})
+
+    }
+
+ })
+
+
+ 
+ app.get("/read",async(req,res)=>{
+    try {
+        const users = await User.find({age :{$eq : 35}})
+        return res.status(200).json(users )
+        
+    } catch (error) {
+                return res.status(400).json({message:"user not found"})
+
+    }
+
+ })
+
+
+
+
         app.listen(port, () => {
             console.log(`🚀 Server is started on port ${port}..`);
         });
