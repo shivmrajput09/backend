@@ -1,3 +1,5 @@
+import User from "../models/userModel";
+
 export const home =  (req, res) => {
     res.json({ name: "shivam", age: 22 });
 }
