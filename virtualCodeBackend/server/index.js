@@ -2,11 +2,10 @@ import express from "express";
 import dotenv from 'dotenv';
 dotenv.config()
 import cors from "cors"; 
-import mongoose from "mongoose";
-import User from "./models/userModel.js";
-import startServer from "./config/db.js";
+ import startServer from "./config/db.js";
 
-let app = express();
+const app = express();
+const port = process.env.PORT || 5001
 
 // CORS middleware
 app.use(cors({
@@ -17,8 +16,7 @@ app.use(express.json());
 
 app.use("/api",userRouter)
 
-const port = 4001;
-        // Server Start
+         // Server Start
 const startApp = async () => {
     try {
         // Step 1: Pehle MongoDB connect hoga
