@@ -1,13 +1,13 @@
 import express from 'express'
 import dotenv from 'dotenv'
-import connectDB from './db.js'
+import connectDB from './config/db.js'
 import authRouter from './routes/authRoute.js'
 
 dotenv.config()
 let app = express()
 let port = process.env.PORT || 4000
 
-
+app.use(express.json())
  app.use("/api",authRouter)
 
 app.listen(port,()=>{
