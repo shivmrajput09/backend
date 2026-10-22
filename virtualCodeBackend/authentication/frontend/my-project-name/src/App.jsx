@@ -1,18 +1,16 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+
 import './App.css'
+import { Routes, Route } from 'react-router-dom'
+import Login from './pages/login'
+import Signup from './pages/signup'
 
-function App() { 
+function App() {
   return (
-    <div>
-
-      
-      </div>
+    <Routes>
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/login" element={<Login />} />
+    </Routes>
   )
-
-
 }
 
 export default App
