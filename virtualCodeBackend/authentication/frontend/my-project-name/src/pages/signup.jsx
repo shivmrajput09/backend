@@ -8,6 +8,9 @@ function Signup() {
     email: '',
     password: '',
   })
+
+
+
   const [showPassword, setShowPassword] = useState(false)
 
   // Har input ka change handle karta hai (name attribute se match karta hai)
@@ -22,6 +25,7 @@ function Signup() {
     console.log('Signup Data:', formData)
     // yahan API call laga sakte ho
   }
+-
 
   return (
     <div className='w-full h-[100vh] bg-black flex justify-center items-center'>
