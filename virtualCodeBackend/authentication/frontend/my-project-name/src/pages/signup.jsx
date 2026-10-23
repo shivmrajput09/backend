@@ -25,7 +25,21 @@ function Signup() {
     console.log('Signup Data:', formData)
     // yahan API call laga sakte ho
   }
--
+  const handleSignUP = async(e)=>{
+    e.preventDefault()
+    try{
+        let data = await axios.post(`${serverUrl}/api/signup`,formData,{
+            firstName,
+            lastName,
+            userName,
+            email,
+            password},{withCredentials:true})
+            console.log(data);
+    }
+    catch(error){
+console.log(error.message)
+    }
+  }
 
   return (
     <div className='w-full h-[100vh] bg-black flex justify-center items-center'>
