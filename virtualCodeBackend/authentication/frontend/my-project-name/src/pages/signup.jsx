@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 
 function Signup() {
+    let {serverUrl} = useContext(dataContext)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
