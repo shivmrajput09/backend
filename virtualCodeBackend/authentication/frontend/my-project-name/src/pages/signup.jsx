@@ -1,7 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useContext } from 'react'
+import axios from 'axios'
+// dataContext import kar lena jahan se bhi banaya ho
+// import { dataContext } from './context/userContext' 
 
 function Signup() {
-    let {serverUrl} = useContext(dataContext)
+  let { serverUrl } = useContext(dataContext)
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -9,35 +13,55 @@ function Signup() {
     password: '',
   })
 
-
-
   const [showPassword, setShowPassword] = useState(false)
+  
+  // 1. Image upload ke liye states aur ref
+  const [frontEndImage, setFrontEndImage] = useState(null) // Image preview ke liye
+  const [backendImage, setBackendImage] = useState(null)   // Actual file backend bhejney ke liye
+  const fileRef = useRef(null)                             // Hidden input ko trigger karne ke liye
 
-  // Har input ka change handle karta hai (name attribute se match karta hai)
+  // Input change handler
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Form submit hone pe page reload rokta hai
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log('Signup Data:', formData)
-    // yahan API call laga sakte ho
-  }
-  const handleSignUP = async(e)=>{
-    e.preventDefault()
-    try{
-        let data = await axios.post(`${serverUrl}/api/signup`,formData,{
-            firstName,
-            lastName,
-            userName,
-            email,
-            password},{withCredentials:true})
-            console.log(data);
+  // 2. Image select handle karna
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        setBackendImage(file); // Backend bhejne ke liye save kiya
+        setFrontEndImage(URL.createObjectURL(file)); // Preview dikhane ke liye URL banaya
     }
-    catch(error){
-console.log(error.message)
+  }
+
+  // 3. API Call with FormData
+  const handleSignUP = async(e) => {
+    e.preventDefault()
+    try {
+        // Normal JSON ki jagah FormData use karna padega kyunki file bhejni hai
+        const submitData = new FormData();
+        submitData.append("firstName", formData.firstName);
+        submitData.append("lastName", formData.lastName);
+        submitData.append("email", formData.email);
+        submitData.append("password", formData.password);
+        
+        // Agar image select ki hai toh usko bhi append kardo
+        if (backendImage) {
+            submitData.append("profileImage", backendImage);
+        }
+
+        let response = await axios.post(`${serverUrl}/api/signup`, submitData, {
+            headers: {
+                "Content-Type": "multipart/form-data" // Backend ko batana ki ye form-data hai
+            },
+            withCredentials: true
+        });
+        
+        console.log("Success:", response.data);
+    }
+    catch(error) {
+        console.log("Error:", error.message)
     }
   }
 
@@ -47,26 +71,38 @@ console.log(error.message)
 
             <h1 className='text-white text-[20px] font-semibold'>SignUp</h1>
 
-            {/* Blank Profile Picture */}
-            <div className='w-[90px] h-[90px] rounded-full border-2 border-gray-500 flex justify-center items-center'>
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="45"
-                    height="45"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="gray"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                >
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
-                </svg>
+            {/* 4. Clickable Profile Picture Area */}
+            <div 
+                className='w-[90px] h-[90px] rounded-full border-2 border-gray-500 flex justify-center items-center overflow-hidden cursor-pointer relative group'
+                onClick={() => fileRef.current.click()} // Click karne par hidden input trigger hoga
+            >
+                {/* Agar image select ho gayi toh preview dikhao, warna default SVG */}
+                {frontEndImage ? (
+                    <img src={frontEndImage} alt="Profile" className='w-full h-full object-cover' />
+                ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
+                    </svg>
+                )}
+                
+                {/* Hover Effect (Video mein dikhaya tha) */}
+                <div className='absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity'>
+                     <span className='text-white text-2xl'>+</span>
+                </div>
             </div>
 
+            {/* 5. Hidden File Input */}
+            <input 
+                type="file" 
+                hidden 
+                ref={fileRef} 
+                onChange={handleImageChange} 
+                accept="image/*"
+            />
+
             <form
-                onSubmit={handleSubmit}
+                onSubmit={handleSignUP} // onSubmit par apka original API call function lagaya
                 className='w-[100%] flex flex-col items-center justify-center gap-[20px]'
             >
 
@@ -115,7 +151,6 @@ console.log(error.message)
                         minLength={6}
                         className='w-full bg-transparent border border-gray-500 text-white p-2 pr-14 outline-none rounded'
                     />
-                    {/* Show / Hide password */}
                     <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
@@ -138,4 +173,4 @@ console.log(error.message)
   )
 }
 
-export default Signup
+export default Signup;
