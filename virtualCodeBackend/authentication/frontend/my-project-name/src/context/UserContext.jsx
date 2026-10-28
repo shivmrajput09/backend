@@ -1,19 +1,22 @@
-import React ,{createContext} from 'react'
-
+import React, { createContext, useState } from 'react'
 
 export const dataContext = createContext()
 
-const serverUrl  = "http://localhost:8000"
+function UserContext({ children }) {
+  const [userData, setUserData] = useState(null)
 
-const value = {
-   serverUrl 
-}
+  // Apne backend ka actual port yahan rakho
+  const serverUrl = 'http://localhost:1001'
 
+  const value = {
+    serverUrl,
+    userData,
+    setUserData,
+  }
 
-function UserContext({children}) {
   return (
-    <dataContext.Provider value={value}> 
- {children}
+    <dataContext.Provider value={value}>
+      {children}
     </dataContext.Provider>
   )
 }

@@ -1,176 +1,233 @@
-import React, { useState, useRef, useContext } from 'react'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
-// dataContext import kar lena jahan se bhi banaya ho
-// import { dataContext } from './context/userContext' 
 
 function Signup() {
-  let { serverUrl } = useContext(dataContext)
-
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    userName: '',
     email: '',
     password: '',
   })
 
-  const [showPassword, setShowPassword] = useState(false)
-  
-  // 1. Image upload ke liye states aur ref
-  const [frontEndImage, setFrontEndImage] = useState(null) // Image preview ke liye
-  const [backendImage, setBackendImage] = useState(null)   // Actual file backend bhejney ke liye
-  const fileRef = useRef(null)                             // Hidden input ko trigger karne ke liye
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [profilePic, setProfilePic] = useState(null)
 
-  // Input change handler
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    })
   }
 
-  // 2. Image select handle karna
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        setBackendImage(file); // Backend bhejne ke liye save kiya
-        setFrontEndImage(URL.createObjectURL(file)); // Preview dikhane ke liye URL banaya
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    setLoading(true);
+
+    // 1. FormData का ऑब्जेक्ट बनाएँ
+    const submitData = new FormData();
+    submitData.append('firstName', formData.firstName);
+    submitData.append('lastName', formData.lastName);
+    submitData.append('userName', formData.userName);
+    submitData.append('email', formData.email);
+    submitData.append('password', formData.password);
+    
+    // 2. इमेज फाइल को भी append करें (अगर सेलेक्ट की गई है)
+    if (profilePic) {
+      submitData.append('profilePic', profilePic);
     }
-  }
 
-  // 3. API Call with FormData
-  const handleSignUP = async(e) => {
-    e.preventDefault()
     try {
-        // Normal JSON ki jagah FormData use karna padega kyunki file bhejni hai
-        const submitData = new FormData();
-        submitData.append("firstName", formData.firstName);
-        submitData.append("lastName", formData.lastName);
-        submitData.append("email", formData.email);
-        submitData.append("password", formData.password);
-        
-        // Agar image select ki hai toh usko bhi append kardo
-        if (backendImage) {
-            submitData.append("profileImage", backendImage);
+      const response = await axios.post(
+        'http://localhost:1001/api/signup',
+        submitData, // यहाँ formData की जगह submitData भेजें
+        {
+          withCredentials: true,
+          // 3. Header में multipart/form-data बताना ज़रूरी है
+          headers: {
+            'Content-Type': 'multipart/form-data', 
+          },
         }
+      );
 
-        let response = await axios.post(`${serverUrl}/api/signup`, submitData, {
-            headers: {
-                "Content-Type": "multipart/form-data" // Backend ko batana ki ye form-data hai
-            },
-            withCredentials: true
-        });
-        
-        console.log("Success:", response.data);
+      setMessage('Account created successfully!');
+      console.log('Signup successful:', response.data);
+
+      // फॉर्म को रिसेट करें
+      setFormData({
+        firstName: '',
+        lastName: '',
+        userName: '',
+        email: '',
+        password: '',
+      });
+      setProfilePic(null);
+
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || error.message;
+
+      setMessage(errorMessage);
+      console.error('Signup error:', error.response?.data || error.message);
+    } finally {
+      setLoading(false);
     }
-    catch(error) {
-        console.log("Error:", error.message)
-    }
-  }
+  }; // <-- handleSubmit फंक्शन यहाँ सही तरीके से बंद हुआ है
 
   return (
-    <div className='w-full h-[100vh] bg-black flex justify-center items-center'>
-        <div className='w-[90%] max-w-[500px] h-[600px] bg-[#141f1f] flex flex-col justify-center items-center gap-[20px]'>
+    <div className="flex min-h-screen items-center justify-center bg-black p-5">
+      <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-[#141f1f] p-8 shadow-2xl">
 
-            <h1 className='text-white text-[20px] font-semibold'>SignUp</h1>
+        <h1 className="mb-2 text-center text-3xl font-bold text-white">
+          Create Account
+        </h1>
 
-            {/* 4. Clickable Profile Picture Area */}
-            <div 
-                className='w-[90px] h-[90px] rounded-full border-2 border-gray-500 flex justify-center items-center overflow-hidden cursor-pointer relative group'
-                onClick={() => fileRef.current.click()} // Click karne par hidden input trigger hoga
-            >
-                {/* Agar image select ho gayi toh preview dikhao, warna default SVG */}
-                {frontEndImage ? (
-                    <img src={frontEndImage} alt="Profile" className='w-full h-full object-cover' />
-                ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="gray" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
-                    </svg>
-                )}
-                
-                {/* Hover Effect (Video mein dikhaya tha) */}
-                <div className='absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity'>
-                     <span className='text-white text-2xl'>+</span>
-                </div>
-            </div>
+        {/* Profile Picture Upload */}
+        <div className="mb-6 flex flex-col items-center">
+          <label
+            htmlFor="profilePic"
+            className="group relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-gray-500 bg-gray-800 transition hover:border-blue-500"
+          >
+            {profilePic ? (
+              <img
+                src={URL.createObjectURL(profilePic)}
+                alt="Profile Preview"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="h-12 w-12 text-gray-400"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a8.25 8.25 0 0 1 15 0"
+                />
+              </svg>
+            )}
 
-            {/* 5. Hidden File Input */}
-            <input 
-                type="file" 
-                hidden 
-                ref={fileRef} 
-                onChange={handleImageChange} 
-                accept="image/*"
+            <input
+              id="profilePic"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) setProfilePic(file)
+              }}
+            />
+          </label>
+
+          <p className="mt-2 text-sm text-gray-400">
+            Upload Profile Picture
+          </p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
+          {/* First Name and Last Name */}
+          <div className="flex gap-3">
+            <input
+              type="text"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              placeholder="First name"
+              autoComplete="given-name"
+              required
+              className="w-1/2 min-w-0 rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
             />
 
-            <form
-                onSubmit={handleSignUP} // onSubmit par apka original API call function lagaya
-                className='w-[100%] flex flex-col items-center justify-center gap-[20px]'
-            >
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              placeholder="Last name"
+              autoComplete="family-name"
+              required
+              className="w-1/2 min-w-0 rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
+            />
+          </div>
 
-                {/* First Name & Last Name */}
-                <div className='w-[80%] flex justify-between gap-[10px]'>
-                    <input
-                        type="text"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        placeholder='first name'
-                        required
-                        className='w-[48%] bg-transparent border border-gray-500 text-white p-2 outline-none rounded'
-                    />
-                    <input
-                        type="text"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        placeholder='last name'
-                        required
-                        className='w-[48%] bg-transparent border border-gray-500 text-white p-2 outline-none rounded'
-                    />
-                </div>
+          {/* Username */}
+          <input
+            type="text"
+            name="userName"
+            value={formData.userName}
+            onChange={handleChange}
+            placeholder="Username"
+            autoComplete="username"
+            required
+            className="w-full rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
+          />
 
-                <div className='w-[80%]'>
-                    <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder='email'
-                        required
-                        className='w-full bg-transparent border border-gray-500 text-white p-2 outline-none rounded'
-                    />
-                </div>
+          {/* Email */}
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Email address"
+            autoComplete="email"
+            required
+            className="w-full rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
+          />
 
-                <div className='w-[80%] relative'>
-                    <input
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        placeholder='password'
-                        required
-                        minLength={6}
-                        className='w-full bg-transparent border border-gray-500 text-white p-2 pr-14 outline-none rounded'
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm'
-                    >
-                        {showPassword ? 'Hide' : 'Show'}
-                    </button>
-                </div>
+          {/* Password */}
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Password"
+            autoComplete="new-password"
+            minLength={6}
+            required
+            className="w-full rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
+          />
 
-                <button
-                    type="submit"
-                    className='w-[20%] bg-blue-600 text-white p-2 mt-4 font-semibold rounded hover:bg-blue-700'
-                >
-                    Sign Up
-                </button>
-            </form>
+          {/* Success or Error Message */}
+          {message && (
+            <p className="text-center text-sm text-white" role="status">
+              {message}
+            </p>
+          )}
 
-        </div>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-lg bg-blue-600 p-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? 'Creating Account...' : 'Sign Up'}
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-gray-400">
+          Already registered?{' '}
+          <Link to="/login" className="text-blue-400 hover:underline">
+            Login
+          </Link>
+        </p>
+
+        <Link
+          to="/"
+          className="mt-4 block text-center text-sm text-gray-400 transition hover:text-white"
+        >
+          Back to Home
+        </Link>
+      </div>
     </div>
   )
 }
 
-export default Signup;
+export default Signup
