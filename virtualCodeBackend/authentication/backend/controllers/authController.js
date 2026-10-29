@@ -1,6 +1,7 @@
 import generateToken from "../config/token.js";
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
+import uploadImage from "../config/cloudnary.js";
 
 // ==================== SIGNUP ====================
 export const signUp = async (req, res) => {
@@ -16,8 +17,9 @@ export const signUp = async (req, res) => {
     }
 
       let profilePic;
+
       if(req.file){
-        
+           profilePic = await uploadImage(req.file.path);
       }
 
 
@@ -41,6 +43,7 @@ export const signUp = async (req, res) => {
       email,
       password: hashedPassword,
       userName,
+      profilePic : profilePic
     });
 
     // Step 6: Generate token using NEW user's ID
@@ -62,6 +65,7 @@ export const signUp = async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         userName: user.userName,
+        profilePic
       },
     });
   } catch (error) {
@@ -147,3 +151,25 @@ export  const  logout =  async(req,res)=>{
 
     }
 }
+
+
+export const getUserData = async(req,res)=>{
+  try{
+    let userId = req.userId
+    if(!userId){
+        return res.status(401).json({message : "unauthorized"})
+
+    }
+    let  user = await User.findById(userId)
+ return res.status(200).json({user})
+ if(!user){
+          return res.status(401).json({message : "user not found"})
+
+ }
+ return res.status(200).json({user})
+  }
+  catch(error){
+    return res.status(500).json({message : error.message})
+
+  }
+} 

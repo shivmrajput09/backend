@@ -1,26 +1,31 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import axios from 'axios'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // 1. useNavigate add kiya
+import axios from 'axios';
 
 function Signup() {
+
+let {serverUrl,userData,setUserData,getUserData} = useContext(dataContext)
+
+
+  let navigate = useNavigate(); // 2. navigate variable banaya
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     userName: '',
     email: '',
     password: '',
-  })
+  });
 
-  const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [profilePic, setProfilePic] = useState(null)
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [profilePic, setProfilePic] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    })
-  }
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,15 +48,16 @@ function Signup() {
     try {
       const response = await axios.post(
         'http://localhost:1001/api/signup',
-        submitData, // यहाँ formData की जगह submitData भेजें
+        submitData, 
         {
           withCredentials: true,
-          // 3. Header में multipart/form-data बताना ज़रूरी है
           headers: {
             'Content-Type': 'multipart/form-data', 
           },
         }
       );
+
+      await getUserData()
 
       setMessage('Account created successfully!');
       console.log('Signup successful:', response.data);
@@ -66,6 +72,11 @@ function Signup() {
       });
       setProfilePic(null);
 
+      // 3. Success ke baad user ko Login page par bhej dein
+      setTimeout(() => {
+         navigate('/login');
+      }, 1500); 
+
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || error.message;
@@ -75,7 +86,7 @@ function Signup() {
     } finally {
       setLoading(false);
     }
-  }; // <-- handleSubmit फंक्शन यहाँ सही तरीके से बंद हुआ है
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black p-5">
@@ -120,8 +131,8 @@ function Signup() {
               accept="image/*"
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) setProfilePic(file)
+                const file = e.target.files?.[0];
+                if (file) setProfilePic(file);
               }}
             />
           </label>
@@ -197,7 +208,7 @@ function Signup() {
 
           {/* Success or Error Message */}
           {message && (
-            <p className="text-center text-sm text-white" role="status">
+            <p className={`text-center text-sm ${message.includes('success') ? 'text-green-500' : 'text-red-500'}`} role="status">
               {message}
             </p>
           )}
@@ -227,7 +238,7 @@ function Signup() {
         </Link>
       </div>
     </div>
-  )
+  );
 }
 
-export default Signup
+export default Signup;

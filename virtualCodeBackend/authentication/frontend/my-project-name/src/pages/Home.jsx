@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom'
 
 function Home() {
+  let {userData , setUserDate} = useContext(dataContext)
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-6 p-6">
       <h1 className="text-4xl font-bold text-white">Welcome Home</h1>

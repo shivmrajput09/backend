@@ -1,7 +1,9 @@
 // अगर आप import इस्तेमाल कर रहे हैं (ES Modules):
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs';
+import dotenv from 'dotenv'
 
+dotenv.config()
 
 // या अगर आप require इस्तेमाल कर रहे हैं (CommonJS):
 // const cloudinary = require('cloudinary').v2;
@@ -15,10 +17,10 @@ cloudinary.config({
 
 const uploadImage = async (filePath) => {
 try{
-    if(!filepath){
+    if(!filePath){
         return null
     }
-let result = cloudinary.uploader.upload(filePath)
+let result = await cloudinary.uploader.upload(filePath)
 console.log(result);
 
 fs.unlinkSync(filePath)
