@@ -15,12 +15,15 @@ cloudinary.config({
 
 const uploadImage = async (filePath) => {
 try{
-    if(filepath){
+    if(!filepath){
         return null
     }
 let result = cloudinary.uploader.upload(filePath)
 console.log(result);
+
+fs.unlinkSync(filePath)
 return   result.secure_url
+
 }
 catch(error){
 fs.unlinkSync(filePath)

@@ -15,6 +15,13 @@ export const signUp = async (req, res) => {
       });
     }
 
+      let profilePic;
+      if(req.file){
+        
+      }
+
+
+
     // Step 3: Check existing user
     const existUser = await User.findOne({ email });
 
