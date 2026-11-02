@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // 1. useNavigate add kiya
+import { useContext, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { dataContext } from '../context/UserContext';
 
 function Signup() {
 

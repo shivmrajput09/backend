@@ -1,43 +1,44 @@
-import React, { createContext, useState } from 'react'
 
-export const dataContext = createContext()
+import React, { createContext, useState, useEffect } from 'react';
+import axios from 'axios';
+
+export const dataContext = createContext();
 
 function UserContext({ children }) {
-  const [userData, setUserData] = useState(null)
+  const [userData, setUserData] = useState(null);
 
-  // Apne backend ka actual port yahan rakho
-  const serverUrl = 'http://localhost:1001'
+  // Backend URL
+  const serverUrl = 'http://localhost:1001';
 
-  const getUserData = async ()=>{
-    try{
-let {data} = await axios.get(serverUrl + "/api/test")
-setUserData(data)
+  // Get User Data
+  const getUserData = async () => {
+    try {
+      let { data } = await axios.get(serverUrl + '/api/test', {
+        withCredentials: true,
+      });
+
+      setUserData(data);
+    } catch (error) {
+      console.log('Get User Data Error:', error);
     }
-
-
-     catch(error){
-
-    }
-
-  }
+  };
 
   const value = {
     serverUrl,
     userData,
     setUserData,
-    getUserData
-  }
-useEffect(()=>{
-   getUserDate() 
-},[])
+    getUserData,
+  };
 
-
+  useEffect(() => {
+    getUserData();
+  }, []);
 
   return (
     <dataContext.Provider value={value}>
       {children}
     </dataContext.Provider>
-  )
+  );
 }
 
-export default UserContext
+export default UserContext;
