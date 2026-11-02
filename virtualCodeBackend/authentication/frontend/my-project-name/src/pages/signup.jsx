@@ -1,245 +1,116 @@
-import { useContext, useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { dataContext } from '../context/UserContext';
+import { dataContext } from '../context/UserContext'; 
 
 function Signup() {
+  const navigate = useNavigate(); 
+  const { getUserData, serverUrl } = useContext(dataContext); 
 
-let {serverUrl,userData,setUserData,getUserData} = useContext(dataContext)
+  let [frontendImage, setFrontendImage] = useState(null); 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-
-  let navigate = useNavigate(); // 2. navigate variable banaya
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    userName: '',
-    email: '',
-    password: '',
-  });
-
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [profilePic, setProfilePic] = useState(null);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
-    setMessage('');
-    setLoading(true);
-
-    // 1. FormData का ऑब्जेक्ट बनाएँ
-    const submitData = new FormData();
-    submitData.append('firstName', formData.firstName);
-    submitData.append('lastName', formData.lastName);
-    submitData.append('userName', formData.userName);
-    submitData.append('email', formData.email);
-    submitData.append('password', formData.password);
-    
-    // 2. इमेज फाइल को भी append करें (अगर सेलेक्ट की गई है)
-    if (profilePic) {
-      submitData.append('profilePic', profilePic);
-    }
-
     try {
-      const response = await axios.post(
-        'http://localhost:1001/api/signup',
-        submitData, 
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'multipart/form-data', 
-          },
-        }
-      );
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("password", password);
+      if (frontendImage) formData.append("image", frontendImage);
 
-      await getUserData()
-
-      setMessage('Account created successfully!');
-      console.log('Signup successful:', response.data);
-
-      // फॉर्म को रिसेट करें
-      setFormData({
-        firstName: '',
-        lastName: '',
-        userName: '',
-        email: '',
-        password: '',
+      // API Call
+      await axios.post(`${serverUrl}/api/signup`, formData, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" }
       });
-      setProfilePic(null);
 
-      // 3. Success ke baad user ko Login page par bhej dein
-      setTimeout(() => {
-         navigate('/login');
-      }, 1500); 
+      // साइनअप सफल होने के बाद User Data मंगाएं
+      await getUserData(); 
+
+      // Home पेज पर भेज दें
+      navigate("/home"); 
 
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || error.message;
-
-      setMessage(errorMessage);
-      console.error('Signup error:', error.response?.data || error.message);
-    } finally {
-      setLoading(false);
+      console.log(error);
+      alert("Signup failed! Please check console.");
     }
-  };
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black p-5">
-      <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-[#141f1f] p-8 shadow-2xl">
-
-        <h1 className="mb-2 text-center text-3xl font-bold text-white">
+      <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-[#141f1f] p-8">
+        
+        <h1 className="mb-8 text-center text-3xl font-bold text-white">
           Create Account
         </h1>
 
-        {/* Profile Picture Upload */}
-        <div className="mb-6 flex flex-col items-center">
-          <label
-            htmlFor="profilePic"
-            className="group relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-gray-500 bg-gray-800 transition hover:border-blue-500"
-          >
-            {profilePic ? (
-              <img
-                src={URL.createObjectURL(profilePic)}
-                alt="Profile Preview"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="h-12 w-12 text-gray-400"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a8.25 8.25 0 0 1 15 0"
-                />
-              </svg>
-            )}
-
-            <input
-              id="profilePic"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) setProfilePic(file);
-              }}
-            />
-          </label>
-
-          <p className="mt-2 text-sm text-gray-400">
-            Upload Profile Picture
-          </p>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-
-          {/* First Name and Last Name */}
-          <div className="flex gap-3">
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              placeholder="First name"
-              autoComplete="given-name"
-              required
-              className="w-1/2 min-w-0 rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
-            />
-
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              placeholder="Last name"
-              autoComplete="family-name"
-              required
-              className="w-1/2 min-w-0 rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
+        <form onSubmit={handleSignUp} className="flex flex-col gap-5">
+          
+          <input 
+            type="text" 
+            placeholder="Name" 
+            value={name} 
+            onChange={(e) => setName(e.target.value)} 
+            required 
+            className="w-full rounded-lg border border-gray-600 bg-transparent p-3 text-white outline-none focus:border-blue-500"
+          />
+          
+          <input 
+            type="email" 
+            placeholder="Email" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+            className="w-full rounded-lg border border-gray-600 bg-transparent p-3 text-white outline-none focus:border-blue-500"
+          />
+          
+          <input 
+            type="password" 
+            placeholder="Password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+            className="w-full rounded-lg border border-gray-600 bg-transparent p-3 text-white outline-none focus:border-blue-500"
+          />
+          
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-gray-400">Profile Image (Optional):</label>
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => setFrontendImage(e.target.files[0])} 
+              className="w-full rounded-lg border border-gray-600 bg-transparent p-2 text-white outline-none file:mr-4 file:rounded-md file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700"
             />
           </div>
 
-          {/* Username */}
-          <input
-            type="text"
-            name="userName"
-            value={formData.userName}
-            onChange={handleChange}
-            placeholder="Username"
-            autoComplete="username"
-            required
-            className="w-full rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
-          />
-
-          {/* Email */}
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Email address"
-            autoComplete="email"
-            required
-            className="w-full rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
-          />
-
-          {/* Password */}
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Password"
-            autoComplete="new-password"
-            minLength={6}
-            required
-            className="w-full rounded-lg border border-gray-600 bg-transparent p-3 text-white placeholder-gray-400 outline-none transition focus:border-blue-500"
-          />
-
-          {/* Success or Error Message */}
-          {message && (
-            <p className={`text-center text-sm ${message.includes('success') ? 'text-green-500' : 'text-red-500'}`} role="status">
-              {message}
-            </p>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-blue-600 p-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          <button 
+            type="submit" 
+            className="rounded-lg bg-blue-600 p-3 font-semibold text-white hover:bg-blue-700 mt-2"
           >
-            {loading ? 'Creating Account...' : 'Sign Up'}
+            Sign Up
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-400">
-          Already registered?{' '}
+          Already a user?{' '}
           <Link to="/login" className="text-blue-400 hover:underline">
-            Login
+            Login here
           </Link>
         </p>
 
         <Link
           to="/"
-          className="mt-4 block text-center text-sm text-gray-400 transition hover:text-white"
+          className="mt-4 block text-center text-sm text-gray-400 hover:text-white"
         >
           Back to Home
         </Link>
+
       </div>
     </div>
-  );
+  )
 }
 
 export default Signup;
