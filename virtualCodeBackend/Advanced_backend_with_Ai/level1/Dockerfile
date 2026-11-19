@@ -2,11 +2,10 @@ FROM node
 
 WORKDIR /app
 
-COPY server.js server.js 
-COPY package.json package.json
-COPY package-lock.json package-lock.json
-
+COPY package*.json .
 RUN npm install 
+COPY . . 
 
+ 
 
 CMD [ "node", "server.js"]
